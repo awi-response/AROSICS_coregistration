@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on May 28 2021
+Created/edited on 13 June 2021
 
 Author: Sophia Barth, Ingmar Nitze
 
@@ -20,14 +20,15 @@ REFERENCE = r''
 assert os.path.exists(REFERENCE), "Reference image not found!"
 
 # please add directory path to input images, for deeper structure add e.g. '/*'
-IMAGE_DIR = r'input_images'
+IMAGE_DIR = r'input_images/*'
 # please add output directory
 OUT_DIR = r'output_images'
 # add suffix to shifted output file names, empty quote to leave original name
 SUFFIX = ''
 
-
-
+# Check if files structure is hierarchical
+len_path = len(os.path.split(IMAGE_DIR))
+hierarchy = len_path > 1
 
 # #### Load image list
 flist = glob.glob(IMAGE_DIR + '/*SR*.tif')
@@ -35,9 +36,15 @@ assert len(flist) > 0, "No input images found!"
 
 # ### Run Processing
 for infile in flist[:]:
+    
+    if hierarchy:
+        out_dir = os.path.join(OUT_DIR, os.path.split(os.path.dirname(infile))[-1])  
+        os.makedirs(out_dir, exist_ok=True)
+    else:
+        out_dir = OUT_DIR
     # create outfile name for main image
-    outfile = os.path.join(OUT_DIR, os.path.basename(infile)[:-4] + f'{SUFFIX}.tif')
-    logfile = os.path.join(OUT_DIR, os.path.basename(infile)[:-4] + f'.log')
+    outfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'{SUFFIX}.tif')
+    logfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'.log')
     # read aux files from main image basename
     base = os.path.basename(infile).split('_3B')[0]
     aux_list = glob.glob(os.path.join(IMAGE_DIR, f'{base}*udm*tif'))
@@ -60,7 +67,7 @@ for infile in flist[:]:
             
             # apply shift to auxilliary files
             for infile_aux in aux_list:
-                outfile_aux = os.path.join(OUT_DIR, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}.tif')
+                outfile_aux = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}.tif')
                 _ = DESHIFTER(infile_aux, CR.coreg_info, 
                               path_out=outfile_aux, 
                               fmt_out='GTIFF',
