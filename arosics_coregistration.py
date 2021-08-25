@@ -17,9 +17,11 @@ import sys
 ### SETTINGS ###
 # please add path to reference image
 REFERENCE = r'reference_image/macs.tif'
+# image band used for calculation on reference image
 REF_Band = 3
 # please add directory path to input images, for deeper structure add e.g. '/*'
 IMAGE_DIR = r'input_images'#+'/*'
+# image band used for calculation on target image
 TGT_Band = 3
 # please add output directory
 OUT_DIR = r'output_images'
@@ -71,13 +73,11 @@ for infile in flist[:]:
     # create outfile name for main image
     outfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'{SUFFIX}.tif')
     logfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'.log')
-    # read aux files from main image basename
-    #base = os.path.basename(infile).split('_3B')[0]
+
     if AUX_FILES:
         # read aux files from main image basename
         base = os.path.basename(infile).split(f'{REGEX_SPLIT}')[0]
         aux_list = glob.glob(os.path.join(os.path.dirname(infile), f'{base}{REGEX_AUXFILES}'))
-    #aux_list = glob.glob(os.path.join(IMAGE_DIR, f'{base}*udm*tif'))
     
     # start logfile
     sys.stdout = open(logfile, 'w')
@@ -105,8 +105,7 @@ for infile in flist[:]:
 
         else:
             print('\nImage kept in original position!')
-    
-    
+
         sys.stdout.close()
     except:
         print('Error')
