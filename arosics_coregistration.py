@@ -8,7 +8,7 @@ Author: Sophia Barth, Ingmar Nitze
 Description: Multiple automated Image Co-registration using 'arosics'
 """
 
-##import Packages
+# import Packages
 from arosics import COREG, DESHIFTER
 import glob
 import os
@@ -16,29 +16,41 @@ import sys
 
 ### SETTINGS ###
 # please add path to reference image
-REFERENCE = r'reference_image/ref.tif'
+REFERENCE = r'reference_image/macs.tif'
+REF_Band = 3
 # please add directory path to input images, for deeper structure add e.g. '/*'
-IMAGE_DIR = r'input_images/*'
+IMAGE_DIR = r'input_images'#+'/*'
+TGT_Band = 3
 # please add output directory
 OUT_DIR = r'output_images'
 # add suffix to shifted output file names, empty quote to leave original name
+MODE = 'MACS' # options: None, 'Planet Scene', 'MACS'
 SUFFIX = ''
+
+# set manually if no mode selected
 AUX_FILES = True
 REGEX_INFILE = '*SR*.tif'
 REGEX_AUXFILES = '*udm*tif'
 REGEX_SPLIT = '_3B'
 
-MODE = 'Planet Scene' # options: None, 'Planet Scene', 'MACS'
-
 modes = {
     'Planet Scene': {
-        'regex_infile':'*SR*.tif',
-        'split':'_3B',
-        'regex_auxfiles':'*udm*tif'}
+        'regex_infile': '*SR*.tif',
+        'split': '_3B',
+        'regex_auxfiles': '*udm*tif'},
+    'MACS':{
+        'regex_infile': '*rgb*.tif',
+        'split': '_transparent',
+        'regex_auxfiles': '*dsm*tif'}
 }
+if MODE:
+    AUX_FILES = True
+    REGEX_INFILE = modes[MODE]['regex_infile']
+    REGEX_AUXFILES = modes[MODE]['regex_auxfiles']
+    REGEX_SPLIT = modes[MODE]['split']
 
-# Check if files structure is hierarchical
-len_path = len(os.path.split(IMAGE_DIR))
+# Check if files structure is hierarchical (using stupid workaround)
+len_path = len([p for p in os.path.split(IMAGE_DIR) if p != ''])
 hierarchy = len_path > 1
 
 # Check if reference file exists
@@ -63,8 +75,8 @@ for infile in flist[:]:
     #base = os.path.basename(infile).split('_3B')[0]
     if AUX_FILES:
         # read aux files from main image basename
-        base = os.path.basename(infile).split(f'_3B')[0]
-        aux_list = glob.glob(os.path.join(os.path.dirname(infile), f'{base}*udm*tif'))
+        base = os.path.basename(infile).split(f'{REGEX_SPLIT}')[0]
+        aux_list = glob.glob(os.path.join(os.path.dirname(infile), f'{base}{REGEX_AUXFILES}'))
     #aux_list = glob.glob(os.path.join(IMAGE_DIR, f'{base}*udm*tif'))
     
     # start logfile
@@ -76,8 +88,8 @@ for infile in flist[:]:
                    max_shift=20, path_out=outfile, 
                    fmt_out='GTIFF',
                    out_crea_options=['COMPRESS=DEFLATE'],
-                   r_b4match=4, 
-                   s_b4match=4)
+                   r_b4match=REF_Band,
+                   s_b4match=TGT_Band)
         output = CR.calculate_spatial_shifts()
         
         if CR.ssim_improved:
