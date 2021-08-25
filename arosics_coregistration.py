@@ -16,17 +16,17 @@ import sys
 
 ### SETTINGS ###
 # please add path to reference image
-REFERENCE = r'reference_image/macs.tif'
+REFERENCE = r'reference_image/ref.tif'
 # image band used for calculation on reference image
 REF_Band = 3
 # please add directory path to input images, for deeper structure add e.g. '/*'
-IMAGE_DIR = r'input_images'#+'/*'
+IMAGE_DIR = r'input_images'+'/*'
 # image band used for calculation on target image
 TGT_Band = 3
 # please add output directory
 OUT_DIR = r'output_images'
 # add suffix to shifted output file names, empty quote to leave original name
-MODE = 'MACS' # options: None, 'Planet Scene', 'MACS'
+MODE = 'Planet Scene' # options: None, 'Planet Scene', 'MACS'
 SUFFIX = ''
 
 # set manually if no mode selected
@@ -71,14 +71,17 @@ for infile in flist[:]:
     else:
         out_dir = OUT_DIR
     # create outfile name for main image
-    outfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'{SUFFIX}.tif')
+    outfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'{SUFFIX}_out.tif')
+    outfile_final = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'{SUFFIX}.tif')
     logfile = os.path.join(out_dir, os.path.basename(infile)[:-4] + f'.log')
+    # compression setup
+    translate = f'gdal_translate -co COMPRESS=DEFLATE {outfile} {outfile_final}'
 
     if AUX_FILES:
         # read aux files from main image basename
         base = os.path.basename(infile).split(f'{REGEX_SPLIT}')[0]
         aux_list = glob.glob(os.path.join(os.path.dirname(infile), f'{base}{REGEX_AUXFILES}'))
-    
+
     # start logfile
     sys.stdout = open(logfile, 'w')
     
@@ -94,14 +97,22 @@ for infile in flist[:]:
         
         if CR.ssim_improved:
             CR.correct_shifts()
+            # apply compression (broken in arosics 1.5.1)?
+            os.system(translate)
+            os.remove(outfile)
             
             # apply shift to auxilliary files
             for infile_aux in aux_list:
-                outfile_aux = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}.tif')
+                outfile_aux = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}_out.tif')
+                outfile_aux_final = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}.tif')
                 _ = DESHIFTER(infile_aux, CR.coreg_info, 
                               path_out=outfile_aux, 
                               fmt_out='GTIFF',
                               out_crea_options=['COMPRESS=DEFLATE']).correct_shifts()
+                # apply compression to aux files
+                translate_aux = f'gdal_translate -co COMPRESS=DEFLATE {outfile_aux} {outfile_aux_final}'
+                os.system(translate_aux)
+                os.remove(outfile_aux)
 
         else:
             print('\nImage kept in original position!')
