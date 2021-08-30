@@ -20,13 +20,13 @@ REFERENCE = r'reference_image/ref.tif'
 # image band used for calculation on reference image
 REF_Band = 3
 # please add directory path to input images, for deeper structure add e.g. '/*'
-IMAGE_DIR = r'input_images'+'/*'
+IMAGE_DIR = r'input_images'#+'/*'
 # image band used for calculation on target image
 TGT_Band = 3
 # please add output directory
 OUT_DIR = r'output_images'
 # add suffix to shifted output file names, empty quote to leave original name
-MODE = 'Planet Scene' # options: None, 'Planet Scene', 'MACS'
+MODE = 'MACS' # options: None, 'Planet Scene', 'MACS'
 SUFFIX = ''
 
 # set manually if no mode selected
@@ -86,39 +86,35 @@ for infile in flist[:]:
     sys.stdout = open(logfile, 'w')
     
     # detect and correct global spatial shift 
-    try:
-        CR = COREG(REFERENCE, infile, wp=(None,None), ws=(600,600),
-                   max_shift=20, path_out=outfile, 
-                   fmt_out='GTIFF',
-                   out_crea_options=['COMPRESS=DEFLATE'],
-                   r_b4match=REF_Band,
-                   s_b4match=TGT_Band)
-        output = CR.calculate_spatial_shifts()
-        
-        if CR.ssim_improved:
-            CR.correct_shifts()
-            # apply compression (broken in arosics 1.5.1)?
-            os.system(translate)
-            os.remove(outfile)
-            
-            # apply shift to auxilliary files
-            for infile_aux in aux_list:
-                outfile_aux = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}_out.tif')
-                outfile_aux_final = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}.tif')
-                _ = DESHIFTER(infile_aux, CR.coreg_info, 
-                              path_out=outfile_aux, 
-                              fmt_out='GTIFF',
-                              out_crea_options=['COMPRESS=DEFLATE']).correct_shifts()
-                # apply compression to aux files
-                translate_aux = f'gdal_translate -co COMPRESS=DEFLATE {outfile_aux} {outfile_aux_final}'
-                os.system(translate_aux)
-                os.remove(outfile_aux)
+    #try:
+    CR = COREG(REFERENCE, infile, wp=(None,None), ws=(600,600),
+               max_shift=200, path_out=outfile,
+               fmt_out='GTIFF',
+               out_crea_options=['COMPRESS=DEFLATE'],
+               r_b4match=REF_Band,
+               s_b4match=TGT_Band)
+    output = CR.calculate_spatial_shifts()
 
-        else:
-            print('\nImage kept in original position!')
+    if CR.ssim_improved:
+        CR.correct_shifts()
+        # apply compression (broken in arosics 1.5.1)?
+        os.system(translate)
+        os.remove(outfile)
 
-        sys.stdout.close()
-    except:
-        print('Error')
-        sys.stdout.close()
-        continue
+        # apply shift to auxilliary files
+        for infile_aux in aux_list:
+            outfile_aux = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}_out.tif')
+            outfile_aux_final = os.path.join(out_dir, os.path.basename(infile_aux)[:-4] + f'{SUFFIX}.tif')
+            _ = DESHIFTER(infile_aux, CR.coreg_info,
+                          path_out=outfile_aux,
+                          fmt_out='GTIFF',
+                          out_crea_options=['COMPRESS=DEFLATE']).correct_shifts()
+            # apply compression to aux files
+            translate_aux = f'gdal_translate -co COMPRESS=DEFLATE {outfile_aux} {outfile_aux_final}'
+            os.system(translate_aux)
+            os.remove(outfile_aux)
+
+    else:
+        print('\nImage kept in original position!')
+
+    sys.stdout.close()
