@@ -9,25 +9,43 @@ Description: Multiple automated Image Co-registration using 'arosics'
 """
 
 # import Packages
+import argparse
 from arosics import COREG, DESHIFTER
 import glob
 import os
 import sys
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-r', '--reference', type=str, default=r'reference_image/ref.tif',
+        help='please add path to reference image')
+parser.add_argument('-i', '--input', type=str, default=r'input_images',
+        help='please add directory path to input images, for deeper structure add e.g. "/*"')
+parser.add_argument('-o', '--output', type=str, default=r'output_images',
+        help='output directory')
+parser.add_argument('-it', '--input_type', type=str, default=r'MACS',
+        help=' options: "None", "Planet Scene", "MACS"')
+parser.add_argument('-b_ref', default=3, type=int,
+        help='image band used for calculation on reference image')
+parser.add_argument('-b_tgt', default=3, type=int,
+        help='image band used for calculation on target images')
+parser.add_argument('-s', '--suffix', type=str, default='',
+        help='add suffix to shifted output file names, empty quote to leave original name')
+args = parser.parse_args()
+
 ### SETTINGS ###
 # please add path to reference image
-REFERENCE = r'reference_image/ref.tif'
+REFERENCE = args.reference#r'reference_image/ref.tif'
 # image band used for calculation on reference image
-REF_Band = 3
+REF_Band = args.b_ref#3
 # please add directory path to input images, for deeper structure add e.g. '/*'
-IMAGE_DIR = r'input_images'#+'/*'
+IMAGE_DIR = args.input#r'input_images'#+'/*'
 # image band used for calculation on target image
-TGT_Band = 3
+TGT_Band = args.b_tgt#3
 # please add output directory
-OUT_DIR = r'output_images'
+OUT_DIR = args.output#'output_images'
 # add suffix to shifted output file names, empty quote to leave original name
-MODE = 'MACS' # options: None, 'Planet Scene', 'MACS'
-SUFFIX = ''
+MODE = args.input_type#'MACS' # options: None, 'Planet Scene', 'MACS'
+SUFFIX = args.suffix#''
 
 # set manually if no mode selected
 AUX_FILES = True
