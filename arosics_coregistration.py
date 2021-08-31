@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on May 28 2021
-Updated on August 25 2021
+Updated on August 31 2021
 
 Author: Sophia Barth, Ingmar Nitze
 
@@ -33,19 +33,13 @@ parser.add_argument('-s', '--suffix', type=str, default='',
 args = parser.parse_args()
 
 ### SETTINGS ###
-# please add path to reference image
-REFERENCE = args.reference#r'reference_image/ref.tif'
-# image band used for calculation on reference image
-REF_Band = args.b_ref#3
-# please add directory path to input images, for deeper structure add e.g. '/*'
-IMAGE_DIR = args.input#r'input_images'#+'/*'
-# image band used for calculation on target image
-TGT_Band = args.b_tgt#3
-# please add output directory
-OUT_DIR = args.output#'output_images'
-# add suffix to shifted output file names, empty quote to leave original name
-MODE = args.input_type#'MACS' # options: None, 'Planet Scene', 'MACS'
-SUFFIX = args.suffix#''
+REFERENCE = args.reference
+REF_Band = args.b_ref
+IMAGE_DIR = args.input
+TGT_Band = args.b_tgt
+OUT_DIR = args.output
+MODE = args.input_type
+SUFFIX = args.suffix
 
 # set manually if no mode selected
 AUX_FILES = True
